@@ -24,6 +24,10 @@ ufw deny 2049
 ufw deny 515
 ufw deny 111
 
+#Add PPA for Mozilla Firefox
+add-apt-repository ppa:ubuntu-mozilla-security/ppa
+#Add PPA for Libre Office
+add-apt-repository ppa:libreoffice/ppa
 # Updates
 apt-get -y update
 apt-get upgrade
@@ -88,10 +92,10 @@ echo "Would you like to change the root login?"
 #Passwords for everyone! (the HUMANS)
 #echo Changing password for user root
 #passwd
-#for i in `awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd`; do 
-#echo Changing password for user $i
-#passwd $i
-#done
+for i in `awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd`; do 
+echo Changing password for user $i
+passwd $i
+done
 	
 # List user accounts by size
 echo "Home directory space by user"
@@ -112,4 +116,4 @@ echo "Home directory space by user"
 
 # Run The Trusty Ol' Buck Security
 cd buck-security
-./buck-security
+./buck-security --sysroot=/
