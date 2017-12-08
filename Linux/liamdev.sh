@@ -11,8 +11,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Install Programs
-apt-get install git
-apt-get install gufw
+apt-get -y update && apt-get install git gufw bum
 
 # Git buck security
 git clone https://github.com/davewood/buck-security
@@ -24,12 +23,9 @@ ufw deny 2049
 ufw deny 515
 ufw deny 111
 
-#Add PPA for Mozilla Firefox
-add-apt-repository ppa:ubuntu-mozilla-security/ppa
-#Add PPA for Libre Office
-add-apt-repository ppa:libreoffice/ppa
+#Add PPA for Mozilla Firefox; Add PPA for Libre Office
+add-apt-repository ppa:ubuntu-mozilla-security/ppa && add-apt-repository ppa:libreoffice/ppa
 # Updates
-apt-get -y update
 apt-get upgrade
 
 # Turns off Guest ACCT
@@ -48,15 +44,7 @@ apt-get -y install libpam-cracklib
 sed -i '1 s/^/password requisite pam_cracklib.so retry=3 minlen=8 difok=3 reject_username minclass=3 maxrepeat=2 dcredit=1 ucredit=1 lcredit=1 ocredit=1\n/' /etc/pam.d/common-password
 
 # Cracking tools/malware.  You get the drift.
-apt-get -y purge hydra*
-apt-get -y purge john*
-apt-get -y purge nikto*
-apt-get -y purge netcat*
-apt-get -y purge aircrack-ng*
-apt-get -y purge hashcat*
-apt-get -y purge nmap*
-apt-get -y purge ncrack*
-apt-get -y purge ophcrack*
+apt-get -y purge hydra* ophcrack* john* nikto* netcat* aircrack-ng* hashcat* nmap* ncrack*
 
 # Enables auto updates
 dpkg-reconfigure -plow unattended-upgrades
@@ -64,18 +52,18 @@ dpkg-reconfigure -plow unattended-upgrades
 # Disable Root Login (SSHd.CONF)
     if [[ -f /etc/ssh/sshd_config ]]; then
         sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
+	echo "Disabled SSH root login."
     else
         echo "No SSH server detected so nothing changed"
     fi
-    echo "Disabled SSH root login (if any)"
     
-# Remove Samba (If Installed)
-echo "Would you like to remove SAMBA?"
+# Start the services manager
+echo "Would you like to start BUM?"
 # while true; do
         read -r -p "$* [y/n]: " yn
         case $yn in
-            [Yy]* ) apt remove --purge samba;;
-            [Nn]* ) echo "Aborted";;
+            [Yy]* ) bum;;
+            [Nn]* ) echo "Okay, moving on...";;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
 
@@ -85,7 +73,7 @@ echo "Would you like to change the root login?"
         read -r -p "$* [y/n]: " yn
         case $yn in
             [Yy]* ) passwd;;
-            [Nn]* ) echo "Aborted";;
+            [Nn]* ) echo "Alright, moving on...";;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
 	
