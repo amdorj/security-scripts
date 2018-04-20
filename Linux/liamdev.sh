@@ -5,16 +5,37 @@ less -FX liamdev.txt # Show figlet text
 
 # Checks for root
 if [[ $EUID -ne 0 ]]; then
-   echo "ERROR!  Script is not being run as root!" 
+   echo "This script requires root privileges. Please type 'sudo !!' or login as root using 'su'." 
    exit 1
-   else echo "Success!  Script is being run as root."
+   else echo "Confirmed running as root."
 fi
+#Initialize some variables.
+env buck=0
+env bum=0
+#Install Git.
+apt-get -y update 
+apt-get install -y git
 
 # Install Programs
-apt-get -y update && apt-get install git gufw bum
+echo "Install the supplementary programs Graphical Firewall Management and Boot-up Manager?"
+	read -r -p "$* [y/n]: " gbk
+        case $sup in
+            [Yy]* ) apt-get -y install gufw bum && env bum=1;;
+            [Nn]* ) echo "Your choice is noted." ;;
+            * ) echo "Invalid input! Please answer y (yes) or n (no)."
+        esac
+
 
 # Git buck security
-git clone https://github.com/davewood/buck-security
+echo "Clone into davewood's buck-security?"
+	read -r -p "$* [y/n]: " gbk
+        case $gbk in
+            [Yy]* ) git clone https://github.com/davewood/buck-security && env buck=1;;
+            [Nn]* ) echo "Your choice is noted." ;;
+            * ) echo "Invalid input! Please answer y (yes) or n (no)."
+        esac
+
+#git clone https://github.com/davewood/buck-security
 
 # Firewall
 ufw enable
@@ -22,11 +43,23 @@ ufw deny 23
 ufw deny 2049
 ufw deny 515
 ufw deny 111
+ufw deny 5900
 
-#Add PPA for Mozilla Firefox; Add PPA for Libre Office
-add-apt-repository ppa:ubuntu-mozilla-security/ppa && add-apt-repository ppa:libreoffice/ppa
-# Updates
-apt-get upgrade
+#Add PPA for Mozilla Firefox; <s>Add PPA for Libre Office</s>
+add-apt-repository ppa:ubuntu-mozilla-security/ppa # && add-apt-repository ppa:libreoffice/ppa
+#Update local package cache
+apt-get update
+
+echo "Perform software upgrades? Note that this step may take a while,"
+echo "and tie up the apt package management."
+# while true; do
+        read -r -p "$* [y/n]: " yn
+        case $yn in
+            [Yy]* ) apt-get upgrade;;
+            [Nn]* ) echo "Understood. Please remember to run 'apt upgrade' later.";;
+            * ) echo "Invalid input! Please answer y (yes) or n (no)."
+        esac
+
 
 # Turns off Guest ACCT
 echo "allow-guest=false" >> /etc/lightdm/lightdm.conf
@@ -57,8 +90,9 @@ dpkg-reconfigure -plow unattended-upgrades
         echo "No SSH server detected so nothing changed"
     fi
     
-# Start the services manager
-echo "Would you like to start BUM?"
+if [[ $bum -e 1 ]]; then
+# Start the services manager (Boot Up Manager)
+echo "Would you like to start BUM(Boot Up Manager) ?"
 # while true; do
         read -r -p "$* [y/n]: " yn
         case $yn in
@@ -66,20 +100,23 @@ echo "Would you like to start BUM?"
             [Nn]* ) echo "Okay, moving on...";;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
+	else
+	echo "Boot-up manager not installed, so not running." 
+fi
 
 # Change Root Login
-echo "Would you like to change the root login?"
+echo "Would you like to disable the root login?"
 # while true; do
         read -r -p "$* [y/n]: " yn
         case $yn in
-            [Yy]* ) passwd;;
-            [Nn]* ) echo "Alright, moving on...";;
+            [Yy]* ) passwd -d root;;
+            [Nn]* ) echo "Alrighty, moving on...";;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
 	
-#Passwords for everyone! (the HUMANS)
-#echo Changing password for user root
-#passwd
+#Passwords for everyone! (the 'humans', uid >= 1000)
+echo "Tip! Copy Cyb3RP@tr!0t$ into gedit, press enter, Ctrl+A then Ctrl+C. Use the middle mouse"
+echo "button or Shift+Insert to quickly paste the password into the terminal. Write it down!" 
 for i in `awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd`; do 
 echo Changing password for user $i
 passwd $i
@@ -90,11 +127,7 @@ echo "Home directory space by user"
 	format="%8s%10s%10s   %-s\n"
 	printf "$format" "Dirs" "Files" "Blocks" "Directory"
 	printf "$format" "----" "-----" "------" "---------"
-	if [ $(id -u) = "0" ]; then
-		dir_list="/home/*"
-	else
-		dir_list=$HOME
-	fi
+	dir_list="/home/*"
 	for home_dir in $dir_list; do
 		total_dirs=$(find $home_dir -type d | wc -l)
 		total_files=$(find $home_dir -type f | wc -l)
@@ -103,5 +136,8 @@ echo "Home directory space by user"
 	done
 
 # Run The Trusty Ol' Buck Security
+if [[ $buck -e 1 ]]; then
 cd buck-security
 ./buck-security --sysroot=/
+else
+echo "Buck security not downloaded, so not running."
