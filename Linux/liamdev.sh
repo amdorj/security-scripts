@@ -10,18 +10,18 @@ if [[ $EUID -ne 0 ]]; then
    else echo "Confirmed running as root."
 fi
 #Initialize some variables.
-env buck=0
-env bum=0
+export buck=0
+export bum=0
 #Install Git.
 apt-get -y update 
 apt-get install -y git
 
 # Install Programs
 echo "Install the supplementary programs Graphical Firewall Management and Boot-up Manager?"
-	read -r -p "$* [y/n]: " gbk
+	read -r -p "$* [y/n]: " sup
         case $sup in
-            [Yy]* ) apt-get -y install gufw bum && env bum=1;;
-            [Nn]* ) echo "Your choice is noted." ;;
+            [Yy]* ) apt-get -y install gufw bum && export bum=1;;
+            [Nn]* ) echo "Your choice is noted." && export bum=0 ;;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
 
@@ -30,8 +30,8 @@ echo "Install the supplementary programs Graphical Firewall Management and Boot-
 echo "Clone into davewood's buck-security?"
 	read -r -p "$* [y/n]: " gbk
         case $gbk in
-            [Yy]* ) git clone https://github.com/davewood/buck-security && env buck=1;;
-            [Nn]* ) echo "Your choice is noted." ;;
+            [Yy]* ) git clone https://github.com/davewood/buck-security && export buck=1;;
+            [Nn]* ) echo "Your choice is noted." && export buck=0;;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
 
@@ -90,7 +90,7 @@ dpkg-reconfigure -plow unattended-upgrades
         echo "No SSH server detected so nothing changed"
     fi
     
-if [[ $bum -e 1 ]]; then
+if [[ $bum == 1 ]]; then
 # Start the services manager (Boot Up Manager)
 echo "Would you like to start BUM(Boot Up Manager) ?"
 # while true; do
@@ -136,8 +136,9 @@ echo "Home directory space by user"
 	done
 
 # Run The Trusty Ol' Buck Security
-if [[ $buck -e 1 ]]; then
-cd buck-security
-./buck-security --sysroot=/
+if [[ $buck == 1 ]]; then
+buck-security/buck-security --sysroot=/
 else
 echo "Buck security not downloaded, so not running."
+fi
+
