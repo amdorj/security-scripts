@@ -17,10 +17,10 @@ apt-get -y update
 apt-get install -y git
 
 # Install Programs
-echo "Install the supplementary programs Graphical Firewall Management and Boot-up Manager?"
+echo "Install the supplementary programs Graphical Firewall Management, Check Rootkit, and Boot-up Manager?"
 	read -r -p "$* [y/n]: " sup
         case $sup in
-            [Yy]* ) apt-get -y install gufw bum && export bum=1;;
+            [Yy]* ) apt-get -y install gufw bum chkrootkit && export bum=1;;
             [Nn]* ) echo "Your choice is noted." && export bum=0 ;;
             * ) echo "Invalid input! Please answer y (yes) or n (no)."
         esac
@@ -125,14 +125,14 @@ done
 # List user accounts by size
 echo "Home directory space by user"
 	format="%8s%10s%10s   %-s\n"
-	printf "$format" "Dirs" "Files" "Blocks" "Directory"
-	printf "$format" "----" "-----" "------" "---------"
+	printf "$format" "Dirs" "Files" "Blocks" "Directory" | tee dirsize.txt
+	printf "$format" "----" "-----" "------" "---------" | tee dirsize.txt
 	dir_list="/home/*"
 	for home_dir in $dir_list; do
 		total_dirs=$(find $home_dir -type d | wc -l)
 		total_files=$(find $home_dir -type f | wc -l)
 		total_blocks=$(du -s $home_dir)
-		printf "$format" $total_dirs $total_files $total_blocks
+		printf "$format" $total_dirs $total_files $total_blocks | tee dirsize.txt
 	done
 
 # Run The Trusty Ol' Buck Security
@@ -142,3 +142,15 @@ else
 echo "Buck security not downloaded, so not running."
 fi
 
+if [[ $bum == 1 ]]; then
+read -r -p "$* [y/n]: " yn
+        case $yn in
+            [Yy]* ) chkrootkit | grep INFECTED;;
+            [Nn]* ) echo "Ah, okay. Let's continue... almost done!";;
+            * ) echo "Invalid input! Please answer y (yes) or n (no)."
+        esac
+	else
+	echo "CHKROOTKIT not installed, so not running." 
+fi
+echo "Script completed. Please remember to look at the output of the script; and check buck-security results."
+echo "Also look at CHKROOTKIT's results, as that may shed some light on some *points* of interest."
